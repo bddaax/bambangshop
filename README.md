@@ -78,6 +78,33 @@ This is the place for you to write reflections:
 
 #### Reflection Publisher-1
 
+> In the Observer pattern diagram explained by the Head First Design Pattern book, Subscriber is defined as an interface. Explain based on your understanding of Observer design patterns, do we still need an interface (or trait in Rust) in this BambangShop case, or a single Model struct is enough?
+
+Untuk kasus BambangShop saat ini, saya rasa cukup menggunakan satu Model struct saja, tidak perlu menggunakan interface (trait). Alasannya adalah karena saat ini hanya ada satu jenis Subscriber, yaitu struct Subscriber, yang berisi url dan name sebagai atribut utama. Dalam pola desain Observer, penggunaan interface atau trait biasanya diperlukan jika kita memiliki banyak jenis Subscriber yang berbeda perilakunya, misalnya ada yang menerima notifikasi melalui API, ada yang menerima notifikasi melalui email, atau ada yang memproses notifikasi secara lokal dengan cara yang berbeda.
+
+Namun, dalam implementasi yang kita gunakan di BambangShop, semua Subscriber memiliki perilaku yang sama, yaitu hanya menyimpan informasi dan menerima notifikasi melalui mekanisme yang seragam. Oleh karena itu, menambahkan trait saat ini akan membuat kode menjadi lebih kompleks tanpa manfaat yang jelas. Jika ke depannya ada kebutuhan untuk mendukung berbagai jenis Subscriber dengan metode notifikasi yang berbeda, maka saat itulah kita bisa mempertimbangkan untuk menggunakan trait agar implementasinya lebih fleksibel.
+
+
+> id in Program and url in Subscriber is intended to be unique. Explain based on your understanding, is using Vec (list) sufficient or using DashMap (map/dictionary) like we currently use is necessary for this case?
+
+Menurut saya, sudah tepat kita menggunakan DashMap dibandingkan Vec. Jika kita menggunakan Vec, maka kita harus melakukan iterasi setiap kali ingin mencari Subscriber berdasarkan url. Ini akan menjadi tidak efisien, terutama jika jumlah Subscriber bertambah banyak. Selain itu, jika kita hanya menggunakan Vec, kita harus memastikan sendiri bahwa url selalu unik, misalnya dengan melakukan pengecekan sebelum menambahkan data baru. Hal ini akan membuat proses menjadi lebih lambat dan lebih rentan terhadap bug jika ada kelalaian dalam pengecekan.
+
+Dengan DashMap, kita bisa langsung menggunakan url sebagai key, sehingga setiap kali ingin menambahkan Subscriber, kita cukup melakukan operasi insert tanpa perlu iterasi. Selain itu, DashMap juga memungkinkan akses concurrent, yang sangat berguna jika kita ingin memastikan bahwa sistem bisa menangani banyak request dari berbagai thread secara aman dan efisien.
+
+Selain itu, dalam implementasi kita, DashMap digunakan sebagai struktur data utama untuk menyimpan Subscriber berdasarkan kategori produk (product_type). Ini juga lebih fleksibel dibandingkan hanya menggunakan satu Vec, karena kita bisa dengan cepat mengakses daftar Subscriber berdasarkan kategori tertentu tanpa perlu menyaring hasil secara manual.
+
+
+> When programming using Rust, we are enforced by rigorous compiler constraints to make a thread-safe program. In the case of the List of Subscribers (SUBSCRIBERS) static variable, we used the DashMap external library for thread safe HashMap. Explain based on your understanding of design patterns, do we still need DashMap or we can implement Singleton pattern instead?
+
+Dalam BambangShop, saya merasa penggunaan DashMap adalah pilihan yang lebih tepat dibandingkan menggantinya dengan pola desain Singleton. Hal ini karena DashMap sudah dirancang agar thread-safe tanpa memerlukan mekanisme locking manual.
+
+Jika kita mengganti DashMap dengan Singleton yang menggunakan HashMap, maka kita perlu menambahkan mekanisme locking seperti Mutex atau RwLock. Masalahnya, jika banyak thread mencoba mengakses atau memperbarui data di HashMap secara bersamaan, mekanisme locking ini bisa menyebabkan bottleneck, yang mengurangi kinerja sistem. Selain itu, jika locking tidak dikelola dengan benar, ada potensi terjadinya deadlock, yang bisa membuat aplikasi menjadi tidak responsif.
+
+Sebaliknya, DashMap sudah memiliki mekanisme internal yang memungkinkan pembacaan dan penulisan data secara concurrent tanpa harus memblokir seluruh map. Ini berarti kita bisa mengakses dan memperbarui data lebih cepat dibandingkan dengan HashMap yang dilindungi oleh Mutex. Oleh karena itu, untuk kebutuhan sistem BambangShop yang menggunakan banyak thread, saya rasa DashMap adalah pilihan yang lebih baik dibandingkan pola Singleton tradisional.
+
+Namun, jika di masa depan ada kebutuhan untuk membatasi akses ke daftar Subscriber agar hanya bisa diakses oleh satu thread dalam kondisi tertentu, maka mungkin kita bisa mempertimbangkan untuk mengombinasikan DashMap dengan pola Singleton. Tetapi, untuk saat ini, DashMap sudah cukup untuk menangani kebutuhan aplikasi dengan cara yang lebih sederhana dan efisien.
+
+
 #### Reflection Publisher-2
 
 #### Reflection Publisher-3
