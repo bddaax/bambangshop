@@ -141,3 +141,53 @@ Dengan fitur Collection, saya bisa menyimpan semua permintaan API yang terkait d
 
 
 #### Reflection Publisher-3
+
+> Observer Pattern has two variations: Push model (publisher pushes data to subscribers) and Pull model (subscribers pull data from publisher). In this tutorial case, which variation of Observer Pattern that we use?
+
+Dalam implementasi notification mechanism di BambangShop, kita menggunakan Push Model, di mana publisher (NotificationService) secara langsung mengirimkan notifikasi ke subscriber begitu terjadi perubahan status pada produk.
+
+Pada implementasi ini, ketika sebuah produk dibuat (create), dihapus (delete), atau diterbitkan (publish), NotificationService secara otomatis mencari daftar subscriber dan mengirimkan notifikasi HTTP POST ke URL yang telah didaftarkan oleh masing-masing subscriber.
+
+Kode di NotificationService memperlihatkan bagaimana notifikasi dikirim menggunakan `thread::spawn(move || subscriber_clone.update(payload_clone));`. Ini menunjukkan bahwa begitu ada perubahan dalam sistem, publisher segera memberitahu subscriber tanpa menunggu permintaan dari mereka.
+
+
+> What are the advantages and disadvantages of using the other variation of Observer Pattern for this tutorial case? (example: if you answer Q1 with Push, then imagine if we used Pull)
+
+Jika kita menggunakan Pull Model, maka alih-alih publisher mengirimkan notifikasi secara langsung, subscriber harus secara aktif mengambil informasi terbaru dari publisher dengan mengirim permintaan ke server secara berkala (misalnya menggunakan polling atau mekanisme lainnya).
+
+Keuntungan Pull Model:
+1) Mengurangi beban pada publisher : 
+Dalam Push Model, setiap perubahan memicu notifikasi ke semua subscriber, yang bisa membebani server jika jumlah subscriber sangat banyak. Dalam Pull Model, subscriber hanya menarik data saat dibutuhkan, mengurangi lonjakan beban pada publisher.
+
+2) Menghindari notifikasi yang tidak perlu : 
+Jika subscriber tidak terlalu sering membutuhkan pembaruan, mereka bisa mengatur sendiri kapan harus mengambil informasi terbaru. Ini lebih efisien dibandingkan mengirim notifikasi setiap ada perubahan kecil.
+
+3) Meningkatkan fleksibilitas pada sisi subscriber : 
+Subscriber dapat mengatur kapan mereka ingin melakukan permintaan ke publisher, sehingga mereka bisa menghindari pemrosesan data di waktu yang tidak diinginkan.
+
+Kerugian Pull Model:
+1) Menambah latensi dalam mendapatkan informasi terbaru : 
+Jika subscriber hanya menarik data secara berkala, ada kemungkinan mereka tidak langsung mendapatkan pembaruan saat terjadi perubahan. Ini bisa menjadi masalah dalam kasus notifikasi real-time seperti di BambangShop.
+
+2) Membutuhkan mekanisme tambahan di sisi subscriber : 
+Dengan Pull Model, subscriber harus memiliki mekanisme untuk secara berkala melakukan polling ke server. Ini bisa menjadi lebih kompleks dan memerlukan sumber daya lebih banyak di sisi klien.
+
+3) Kurang efisien jika banyak subscriber : 
+Jika banyak subscriber terus-menerus meminta data ke server, ini bisa menciptakan beban yang lebih besar daripada jika publisher hanya mengirim notifikasi saat ada perubahan.
+
+
+Dalam BambangShop, Push Model lebih sesuai karena kita menginginkan notifikasi segera dikirim begitu ada perubahan pada produk. Jika kita menggunakan Pull Model, notifikasi bisa tertunda dan membebani subscriber karena mereka harus terus melakukan polling ke server untuk mendapatkan pembaruan terbaru.
+
+
+> Explain what will happen to the program if we decide to not use multi-threading in the notification process.
+
+Saat ini, proses notifikasi diimplementasikan dengan multi-threading, di mana setiap subscriber menerima notifikasi dalam sebuah thread terpisah menggunakan `thread::spawn(move || subscriber_clone.update(payload_clone));`.
+
+Jika kita tidak menggunakan multi-threading, beberapa hal yang akan terjadi adalah:
+
+Pertama, notifikasi menjadi lambat dan terblokir. Tanpa multi-threading, pengiriman notifikasi akan dilakukan secara berurutan (synchronous). Jika ada banyak subscriber, server harus mengirimkan notifikasi satu per satu. Ini berarti jika ada satu subscriber yang lambat atau tidak responsif, proses pengiriman ke subscriber berikutnya akan tertunda.
+Menurunkan performa sistem
+
+Jika server harus menangani banyak transaksi lain (misalnya pembuatan dan penghapusan produk), tanpa multi-threading, setiap pemrosesan notifikasi akan menghalangi eksekusi operasi lainnya. Ini bisa menyebabkan waktu respons API menjadi lebih lama.
+
+Kedua, tidak bisa menangani jumlah subscriber yang besar. Jika sistem memiliki ratusan atau ribuan subscriber, tanpa multi-threading server akan kesulitan mengirimkan notifikasi dengan cepat. Ini bisa menyebabkan penumpukan antrian proses yang memperlambat keseluruhan sistem.
