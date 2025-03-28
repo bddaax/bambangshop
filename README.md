@@ -107,4 +107,37 @@ Namun, jika di masa depan ada kebutuhan untuk membatasi akses ke daftar Subscrib
 
 #### Reflection Publisher-2
 
+> In the Model-View Controller (MVC) compound pattern, there is no “Service” and “Repository”. Model in MVC covers both data storage and business logic. Explain based on your understanding of design principles, why we need to separate “Service” and “Repository” from a Model?
+
+Dalam BambangShop, saya merasa bahwa memisahkan Service dan Repository dari Model adalah keputusan yang tepat karena beberapa alasan utama.
+
+Pertama, pemisahan ini mengikuti prinsip Separation of Concerns (SoC), di mana setiap bagian dari kode memiliki tanggung jawab yang jelas. Repository bertanggung jawab untuk menangani akses data, sedangkan Service menangani logika bisnis. Jika kita menggabungkan semuanya dalam Model, kode akan menjadi terlalu kompleks dan sulit untuk dikelola.
+
+Kedua, pemisahan ini meningkatkan fleksibilitas. Dengan memiliki Repository yang khusus menangani penyimpanan data, kita dapat dengan mudah mengganti implementasi penyimpanan tanpa perlu mengubah bagian lain dari kode. Misalnya, jika saat ini kita menggunakan DashMap tetapi ingin beralih ke database relasional seperti PostgreSQL di masa depan, kita hanya perlu memodifikasi Repository tanpa harus mengubah logika bisnis yang ada di Service.
+
+Ketiga, pemisahan ini memudahkan pengujian. Dengan adanya lapisan Service yang terpisah dari Repository, kita bisa menulis unit test untuk logika bisnis di Service tanpa harus benar-benar terhubung dengan penyimpanan data. Ini membantu meningkatkan kualitas kode dan mengurangi kemungkinan bug.
+
+
+> What happens if we only use the Model? Explain your imagination on how the interactions between each model (Program, Subscriber, Notification) affect the code complexity for each model?
+
+Jika kita hanya menggunakan Model tanpa Service dan Repository, kode akan menjadi jauh lebih kompleks dan sulit dikelola. Berikut beberapa masalah yang kemungkinan akan terjadi:
+
+Pertama, kesulitan dalam memisahkan logika bisnis dan akses data.
+Saat ini, Repository menangani penyimpanan Subscriber, sedangkan Service menangani logika bisnis seperti validasi atau manipulasi data sebelum disimpan. Jika kita menghilangkan kedua lapisan ini, maka semua operasi akan terjadi di dalam Model, menyebabkan kode Model menjadi terlalu besar dan sulit dipahami.
+
+Kedua, kode menjadi sulit diuji. Jika semua logika bisnis dan akses data ada di dalam Model, maka pengujian akan menjadi lebih sulit karena kita tidak dapat dengan mudah mengisolasi bagian tertentu untuk diuji secara unit. Misalnya, jika kita ingin menguji apakah Subscriber berhasil ditambahkan, kita harus menjalankan seluruh kode termasuk penyimpanan data, yang mungkin tidak selalu diinginkan dalam pengujian unit.
+
+Ketiga, meningkatkan ketergantungan antar Model
+Dalam BambangShop, ada beberapa Model utama seperti Program, Subscriber, dan Notification. Jika kita hanya mengandalkan Model tanpa adanya Service, maka setiap Model akan langsung berinteraksi satu sama lain. Misalnya, jika Notification ingin mengakses daftar Subscriber, ia harus langsung berinteraksi dengan Subscriber tanpa melalui Service. Ini bisa menyebabkan keterkaitan yang terlalu erat (tight coupling), sehingga sulit untuk melakukan perubahan di satu bagian tanpa mempengaruhi bagian lain.
+
+
+> Have you explored more about Postman? Tell us how this tool helps you to test your current work. You might want to also list which features in Postman you are interested in or feel like it is helpful to help your Group Project or any of your future software engineering projects.
+
+Ya, saya telah melakukan sedikit eksplorasi tentang Postman, dan saya merasa alat ini sangat membantu dalam pengujian API yang sedang saya kerjakan di BambangShop.
+
+Dalam BambangShop, saya menggunakan Postman untuk menguji endpoint subscribe dan unsubscribe yang telah saya buat di dalam Notification Controller. Dengan Postman, saya bisa dengan mudah mengirim permintaan HTTP POST ke endpoint subscribe/<product_type> dengan data Subscriber, dan memeriksa apakah Subscriber berhasil ditambahkan. Begitu juga dengan endpoint unsubscribe/<product_type>?<url>, saya bisa langsung mengecek apakah Subscriber berhasil dihapus dari sistem.
+
+Dengan fitur Collection, saya bisa menyimpan semua permintaan API yang terkait dengan BambangShop dalam satu tempat, sehingga tidak perlu mengetik ulang setiap kali ingin melakukan pengujian. Selain itu, Environment Variables memungkinkan saya untuk menyimpan nilai seperti base_url agar lebih mudah beradaptasi jika ada perubahan server.
+
+
 #### Reflection Publisher-3
